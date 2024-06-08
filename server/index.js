@@ -8,7 +8,8 @@ import helmet from "helmet";
 import morgan from "morgan";
 import path from "path";
 import { fileURLToPath } from "url";
-
+import { register } from "./controllers/auth.js";
+import authRouter   from "./routes/authRoutes.js";
 // Configuration
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -21,17 +22,33 @@ app.use(helmet.crossOriginResourcePolicy({ policy: "cross-origin" }));
 app.use(bodyParser.json({ limit: "30mb", extended: true }));
 app.use(bodyParser.urlencoded({ limit: "30mb", extended: true }));
 app.use(cors());
-app.use("/assets", express.static(path.json(__dirname, "public/assets")));
-
+app.use("/assets", express.static(path.join(__dirname, "public/assets")));
 
 // File Storage
 const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, "public/assets")
-    }, 
-    filename: (req, file, cb) => {
-        cb(null, file.originalname);
-    }
-})
+  destination: (req, file, cb) => {
+    cb(null, "public/assets");
+  },
+  filename: (req, file, cb) => {
+    cb(null, file.originalname);
+  },
+});
 
-const upload = multer({storage})
+const upload = multer({ storage });
+
+// Routes with files
+app.post("/auth/register", upload.single("picture"), register);
+
+// Routes
+app.use("/auth", authRouter);
+
+// Mongoose Setup
+const PORT = process.env.PORT || 6001;
+mongoose
+  .connect(process.env.MONGODB)
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log(`Server Port: ${PORT}`);
+    });
+  })
+  .catch((error) => console.log(`${error} did not match`));
