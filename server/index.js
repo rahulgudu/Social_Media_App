@@ -11,6 +11,9 @@ import { fileURLToPath } from "url";
 import { register } from "./controllers/auth.js";
 import authRouter   from "./routes/authRoutes.js";
 import userRouter from "./routes/userRoutes.js";
+import { verifyToken } from "./middlewares/auth.js";
+import { createPost } from "./controllers/posts.js";
+import postRouter from "./routes/postsRouter.js";
 // Configuration
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -39,10 +42,12 @@ const upload = multer({ storage });
 
 // Routes with files
 app.post("/auth/register", upload.single("picture"), register);
+app.post("/posts/create-post", verifyToken, upload.single("picture"), createPost);
 
 // Routes
 app.use("/auth", authRouter);
-app.use("/users", userRouter)
+app.use("/users", userRouter);
+app.use("/posts", postRouter);
 
 // Mongoose Setup
 const PORT = process.env.PORT || 6001;
